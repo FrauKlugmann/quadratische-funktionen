@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Funktionstrainer – Quadratische Funktionen</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#eef3f8;color:#1f2937;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:1120px;margin:auto;padding:16px}
+.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 3px 16px #0001}
+h1{text-align:center;margin:3px 0 5px;color:#102a43}
+.subtitle{text-align:center;color:#64748b;margin:0 0 16px}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.group{border:1px solid #cbd5e1;border-radius:13px;padding:11px}
+h2{font-size:1.08rem;margin:0 0 9px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.choice,.btn{min-height:46px;border:1px solid #cbd5e1;border-radius:11px;background:#f8fafc;padding:9px 13px;font:inherit;font-weight:800;cursor:pointer}
+.choice.on{background:#dbeafe;border-color:#2563eb;color:#1d4ed8}
+.btn{background:#2563eb;color:#fff;border:0}.btn.light{background:#f8fafc;color:#334155;border:1px solid #cbd5e1}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stats{display:flex;gap:15px;font-weight:800;flex-wrap:wrap}
+.work{display:grid;grid-template-columns:minmax(430px,1.2fr) minmax(300px,.8fr);gap:18px;align-items:start}
+.graphwrap{overflow:auto}
+.graph{display:block;width:100%;min-width:420px;height:auto;border:1px solid #cbd5e1;border-radius:14px;background:#fff;touch-action:manipulation}
+.taskbox{border:2px solid #dbe3ec;border-radius:14px;padding:15px}
+.eq{font-size:1.5rem;font-weight:900;text-align:center;padding:13px;border-radius:12px;background:#eff6ff;color:#1e3a5f;margin:8px 0 13px}
+.hint{color:#64748b;font-size:.94rem;line-height:1.45}
+.pointlist{display:grid;gap:8px;margin:12px 0}
+.point{padding:9px 11px;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;font-weight:800}
+.hidden{display:none!important}.feedback{min-height:48px;margin-top:11px;padding:11px;border-radius:11px;text-align:center;font-weight:800;visibility:hidden}
+.feedback.good{visibility:visible;background:#f0fdf4;color:#15803d}
+.feedback.bad{visibility:visible;background:#fef2f2;color:#b91c1c}
+.knowledgebar{display:flex;justify-content:flex-end;margin:0 0 12px}.knowledge{background:#0f766e}.knowledgeOverlay{position:fixed;inset:0;background:#0f172a99;display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}.knowledgeCard{background:#fff;max-width:720px;width:100%;max-height:88vh;overflow:auto;border-radius:18px;padding:20px;box-shadow:0 18px 60px #0005}.knowledgeCard h2{margin-top:0;color:#102a43}.knowledgeCard h3{margin:18px 0 7px;color:#1e3a5f}.knowledgeCard p,.knowledgeCard li{line-height:1.55}.knowledgeExample{background:#eff6ff;border-left:5px solid #2563eb;border-radius:10px;padding:12px 14px}.knowledgeFormula{font-size:1.15rem;font-weight:900;text-align:center;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:10px;margin:10px 0}.knowledgeClose{float:right;margin-left:12px}
+@media(max-width:850px){.work,.controls{grid-template-columns:1fr}.graph{min-width:360px}}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+  <h1>Funktionstrainer – Quadratische Funktionen</h1>
+  <p class="subtitle">Parabeln zeichnen und quadratische Funktionen untersuchen</p>
+  <div class="controls">
+    <div class="group">
+      <h2>Aufgabentyp</h2>
+      <div class="row" id="modeGroup">
+        <button class="choice on" data-mode="draw" type="button">Gleichung → Parabel</button>
+        <button class="choice" data-mode="read" type="button">Parabel → Gleichung</button>
+        <button class="choice" data-mode="properties" type="button">Eigenschaften</button>
+      </div>
+    </div>
+    <div class="group" id="drawFormGroup">
+      <h2>Darstellungsform</h2>
+      <div class="row" id="formGroup">
+        <button class="choice on" data-form="normal" type="button">Normalform</button>
+        <button class="choice" data-form="vertex" type="button">Scheitelpunktform</button>
+        <button class="choice" data-form="general" type="button">allgemeine Form</button>
+      </div>
+    </div>
+    <div class="group hidden" id="readFormGroup">
+      <h2>Gesuchte Form</h2>
+      <div class="row" id="readFormButtons">
+        <button class="choice on" data-read-form="vertex" type="button">Scheitelpunktform</button>
+        <button class="choice" data-read-form="general" type="button">allgemeine Form</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="top">
+    <button class="btn" id="newTask" type="button">Neue Aufgabe</button>
+    <div class="stats">
+      <span>Richtig: <b id="right">0</b></span>
+      <span>Falsch: <b id="wrong">0</b></span>
+      <span>Trefferquote: <b id="percent">–</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="card work">
+  <section id="graphSection">
+    <div class="knowledgebar"><button class="btn knowledge" id="knowledgeBtn" type="button">Wissen</button></div>
+    <p class="hint" style="margin:0 0 12px">Kompaktes Wissen und ein Beispiel passend zum gewählten Aufgabentyp und zur Darstellungsform.</p>
+    <h2>Koordinatensystem</h2>
+    <div class="graphwrap"><svg id="graph" class="graph" viewBox="0 0 620 620" aria-label="Koordinatensystem"></svg></div>
+    <p class="hint" id="graphModeHint">Markiere drei Punkte der Parabel – am besten den Scheitelpunkt und zwei weitere Punkte. Sobald drei Punkte gesetzt sind, wird die Parabel durch diese Punkte eingezeichnet.</p>
+  </section>
+
+  <section class="taskbox">
+    <div id="drawTask">
+      <h2>Zeichne die Parabel</h2>
+      <p class="hint" id="formHint"></p>
+      <div class="eq" id="givenEq"></div>
+      <div class="pointlist">
+        <div class="point">Punkt 1: <span id="p1">–</span></div>
+        <div class="point">Punkt 2: <span id="p2">–</span></div>
+        <div class="point">Punkt 3: <span id="p3">–</span></div>
+      </div>
+      <div class="row">
+        <button class="btn" id="checkDraw" type="button">Prüfen</button>
+        <button class="btn light" id="clearPoints" type="button">Punkte löschen</button>
+      </div>
+    </div>
+
+    <div id="readTask" class="hidden">
+      <h2>Bestimme die Funktionsgleichung</h2>
+      <p class="hint" id="readHint">Lies die Parabel ab und gib die Funktionsgleichung in der ausgewählten Form an.</p>
+      <div class="eq" id="readTemplate"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin:8px 0 12px">
+        <strong style="font-size:1.2rem;white-space:nowrap">f(x) =</strong>
+        <input id="equationInput" type="text" readonly autocomplete="off"
+          style="width:100%;min-height:52px;border:2px solid #cbd5e1;border-radius:11px;padding:10px 12px;font:inherit;font-size:1.1rem"
+          placeholder="Term eingeben">
+      </div>
+
+      <div class="keypad" id="equationKeypad" aria-label="Tastenfeld für die Funktionsgleichung"
+           style="display:grid;grid-template-columns:repeat(5,minmax(52px,1fr));gap:8px;margin:8px 0 14px">
+        <button class="choice" type="button" data-key="7">7</button>
+        <button class="choice" type="button" data-key="8">8</button>
+        <button class="choice" type="button" data-key="9">9</button>
+        <button class="choice" type="button" data-key="x">x</button>
+        <button class="choice" type="button" data-key="²">x²</button>
+
+        <button class="choice" type="button" data-key="4">4</button>
+        <button class="choice" type="button" data-key="5">5</button>
+        <button class="choice" type="button" data-key="6">6</button>
+        <button class="choice" type="button" data-key="+">+</button>
+        <button class="choice" type="button" data-key="-">−</button>
+
+        <button class="choice" type="button" data-key="1">1</button>
+        <button class="choice" type="button" data-key="2">2</button>
+        <button class="choice" type="button" data-key="3">3</button>
+        <button class="choice" type="button" data-key="(">(</button>
+        <button class="choice" type="button" data-key=")">)</button>
+
+        <button class="choice" type="button" data-key="0">0</button>
+        <button class="choice" type="button" data-key=",">,</button>
+        <button class="choice" type="button" data-key="back">⌫</button>
+        <button class="choice" type="button" data-key="clear">C</button>
+        <button class="choice" type="button" data-key="=">=</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="checkEquation" type="button">Prüfen</button>
+      </div>
+    </div>
+
+
+    <div id="propertiesTask" class="hidden">
+      <div class="knowledgebar"><button class="btn knowledge" id="propertyKnowledgeBtn" type="button">Wissen zur Eigenschaft</button></div>
+      <h2>Eigenschaften der Parabel</h2>
+      <p class="hint">Alle Fragen beziehen sich auf dieselbe Funktion und werden immer in derselben Reihenfolge gestellt.</p>
+      <div class="eq" id="propertyEq"></div>
+      <div class="point" id="propertyProgress" style="margin-bottom:12px"></div>
+      <div id="propertyQuestion" style="font-size:1.08rem;font-weight:800;margin:10px 0 12px"></div>
+      <div id="propertyAnswer"></div>
+
+      <div class="keypad hidden" id="propertyKeypad" aria-label="Tastenfeld für Eigenschaften"
+           style="display:grid;grid-template-columns:repeat(4,minmax(52px,1fr));gap:8px;margin:10px 0 14px">
+        <button class="choice" type="button" data-key="7">7</button>
+        <button class="choice" type="button" data-key="8">8</button>
+        <button class="choice" type="button" data-key="9">9</button>
+        <button class="choice" type="button" data-key="back">⌫</button>
+        <button class="choice" type="button" data-key="4">4</button>
+        <button class="choice" type="button" data-key="5">5</button>
+        <button class="choice" type="button" data-key="6">6</button>
+        <button class="choice" type="button" data-key="-">−</button>
+        <button class="choice" type="button" data-key="1">1</button>
+        <button class="choice" type="button" data-key="2">2</button>
+        <button class="choice" type="button" data-key="3">3</button>
+        <button class="choice" type="button" data-key=",">,</button>
+        <button class="choice" type="button" data-key="0">0</button>
+        <button class="choice" type="button" data-key="/">/</button>
+        <button class="choice" type="button" data-key="clear">C</button>
+        <button class="choice" type="button" data-key="switch">↔</button>
+      </div>
+
+      <div class="row">
+        <button class="btn" id="checkProperty" type="button">Prüfen</button>
+        <button class="btn light hidden" id="nextProperty" type="button">Nächste Eigenschaft</button>
+        <button class="btn light hidden" id="propertyGraphHelp" type="button">Hilfe: Parabel anzeigen</button>
+      </div>
+    </div>
+
+    <div id="feedback" class="feedback" aria-live="polite"></div>
+  </section>
+</div>
+
+
+<div id="knowledgeOverlay" class="knowledgeOverlay hidden" role="dialog" aria-modal="true" aria-labelledby="knowledgeTitle">
+  <div class="knowledgeCard">
+    <button class="btn light knowledgeClose" id="knowledgeClose" type="button">Schließen</button>
+    <div id="knowledgeContent"></div>
+  </div>
+</div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id),svg=$('graph'),NS='http://www.w3.org/2000/svg';
+const LIM=5,SIZE=620,PAD=52,PLOT=516,STEP=PLOT/(LIM*2);
+let mode='draw',form='normal',readForm='vertex',A=1,B=0,C=0,selected=[],R=0,W=0,locked=false,history=[],propertyStep=0,propertyInputTarget=0,propertyInputs=[],propertyGraphVisible=false,propertyDisplayForm='vertex';
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const xy=(x,y)=>[PAD+(x+LIM)*STEP,PAD+(LIM-y)*STEP];
+
+function el(tag,a={},txt=''){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(txt)e.textContent=txt;return e}
+function stats(){$('right').textContent=R;$('wrong').textContent=W;$('percent').textContent=R+W?Math.round(100*R/(R+W))+' %':'–'}
+function val(x){return A*x*x+B*x+C}
+function signed(n){return n>0?' + '+n:n<0?' - '+Math.abs(n):''}
+function coefX(n,power){
+  if(n===0)return '';
+  const variable=power===2?'x²':'x';
+  if(n===1)return variable;
+  if(n===-1)return '-'+variable;
+  return fmtNum(n)+variable;
+}
+function generalEq(a,b,c){
+  let s=coefX(a,2);
+  if(b>0)s+=' + '+coefX(b,1); else if(b<0)s+=' - '+coefX(Math.abs(b),1);
+  if(c>0)s+=' + '+c; else if(c<0)s+=' - '+Math.abs(c);
+  return 'f(x) = '+s;
+}
+function normalEq(p,q){
+  let s='x²';
+  if(p>0)s+=' + '+(p===1?'x':p+'x'); else if(p<0)s+=' - '+(p===-1?'x':Math.abs(p)+'x');
+  if(q>0)s+=' + '+q; else if(q<0)s+=' - '+Math.abs(q);
+  return 'f(x) = '+s;
+}
+function vertexEq(a,d,e){
+  let ap=a===1?'':a===-1?'-':fmtNum(a);
+  let inner=d===0?'x':d>0?'x - '+d:'x + '+Math.abs(d);
+  let s=ap+'('+inner+')²';
+  if(e>0)s+=' + '+e; else if(e<0)s+=' - '+Math.abs(e);
+  return 'f(x) = '+s;
+}
+
+function fmtNum(n){
+  const rounded=Math.abs(n-Math.round(n))<1e-9?Math.round(n):Math.round(n*100)/100;
+  return String(rounded).replace('.',',');
+}
+function vertexData(){
+  const d=-B/(2*A),e=val(d);
+  return {d,e};
+}
+function propertyEquation(){
+  const {d,e}=vertexData();
+  return propertyDisplayForm==='vertex' ? vertexEq(A,d,e) : generalEq(A,B,C);
+}
+function generatePropertyFunction(){
+  let tries=0;
+  while(tries++<1000){
+    const factors=[-3,-2,-1,-0.5,0.5,1,2,3];
+    A=factors[rnd(0,factors.length-1)];
+
+    // Für gestauchte Parabeln wählen wir gerade d-Werte, damit auch
+    // y-Achsenabschnitt und mögliche Nullstellen gut handhabbar bleiben.
+    let d = Math.abs(A)===0.5 ? [-2,0,2][rnd(0,2)] : rnd(-3,3);
+
+    const rootMode=rnd(0,2); // 0: keine, 1: doppelte, 2: zwei Nullstellen
+    let e;
+    if(rootMode===1){
+      e=0;
+    }else if(rootMode===2){
+      const r = Math.abs(A)===0.5 ? 2 : rnd(1,2);
+      e=-A*r*r;
+    }else{
+      const h = rnd(1,3);
+      e=A>0 ? h : -h;
+    }
+
+    // Scheitelpunkt muss ganzzahlig sein.
+    if(!Number.isInteger(d)||!Number.isInteger(e))continue;
+
+    B=-2*A*d;
+    C=A*d*d+e;
+
+    // Gut ablesbare Werte und mindestens ein sichtbarer Teil der Parabel.
+    if(Math.abs(C)>8 || Math.abs(e)>4)continue;
+    let visible=false;
+    for(let x=-5;x<=5;x+=0.5){
+      const y=val(x);
+      if(y>=-5&&y<=5){visible=true;break}
+    }
+    if(!visible)continue;
+
+    const key='P|'+A+'|'+B+'|'+C;
+    if(history.includes(key))continue;
+    history.push(key); if(history.length>2)history.shift();
+    propertyDisplayForm=Math.random()<0.5?'vertex':'general';
+    return;
+  }
+}
+function rootsData(){
+  const disc=B*B-4*A*C;
+  if(disc<-1e-9)return [];
+  if(Math.abs(disc)<1e-9)return [-B/(2*A)];
+  const s=Math.sqrt(disc);
+  return [(-B-s)/(2*A),(-B+s)/(2*A)].sort((a,b)=>a-b);
+}
+function propResetFeedback(){
+  $('feedback').className='feedback';
+  $('feedback').textContent='';
+  $('nextProperty').classList.add('hidden');
+  $('propertyGraphHelp').classList.add('hidden');
+  $('propertyGraphHelp').disabled=false;
+  $('propertyGraphHelp').textContent='Hilfe: Parabel anzeigen';
+}
+function renderPropertyGraph(){
+  grid();
+}
+function showPropertyGraphHelp(){
+  propertyGraphVisible=true;
+  $('graphSection').classList.remove('hidden');
+  if($('graphModeHint')){
+    $('graphModeHint').textContent='Die Parabel zur aktuellen Funktion ist als Hilfe vollständig eingezeichnet.';
+  }
+  renderPropertyGraph();
+  $('propertyGraphHelp').disabled=true;
+  $('propertyGraphHelp').textContent='Parabel als Hilfe eingeblendet';
+}
+function propertyChoice(options,correctIndex){
+  $('propertyAnswer').innerHTML='';
+  const row=document.createElement('div');
+  row.className='row';
+  options.forEach((txt,i)=>{
+    const b=document.createElement('button');
+    b.type='button';b.className='choice';b.innerHTML=txt;
+    b.onclick=()=>{
+      if(locked)return;
+      row.querySelectorAll('.choice').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      b.dataset.selected='1';
+      row.dataset.answer=String(i);
+    };
+    row.appendChild(b);
+  });
+  row.dataset.correct=String(correctIndex);
+  $('propertyAnswer').appendChild(row);
+  $('propertyKeypad').classList.add('hidden');
+}
+function propertyNumeric(labels){
+  $('propertyAnswer').innerHTML='';
+  propertyInputs=[];
+  propertyInputTarget=0;
+  const wrap=document.createElement('div');
+  wrap.className='row';
+  wrap.style.alignItems='center';
+  labels.forEach((lab,i)=>{
+    const box=document.createElement('div');
+    box.style.display='flex';box.style.alignItems='center';box.style.gap='6px';
+    const l=document.createElement('strong');l.textContent=lab;
+    const inp=document.createElement('input');
+    inp.readOnly=true;
+    inp.style.cssText='width:105px;min-height:48px;border:2px solid #cbd5e1;border-radius:11px;padding:8px 10px;font:inherit;font-size:1.1rem;text-align:center';
+    inp.onclick=()=>{propertyInputTarget=i;propertyInputs.forEach((x,j)=>x.style.borderColor=j===i?'#2563eb':'#cbd5e1')};
+    if(i===0)inp.style.borderColor='#2563eb';
+    propertyInputs.push(inp);
+    box.appendChild(l);box.appendChild(inp);wrap.appendChild(box);
+  });
+  $('propertyAnswer').appendChild(wrap);
+  $('propertyKeypad').classList.remove('hidden');
+}
+
+function visibleIntegerPoints(){
+  let pts=[];
+  for(let x=-LIM;x<=LIM;x++){
+    const y=val(x);
+    if(Number.isInteger(y)&&y>=-LIM&&y<=LIM)pts.push({x,y});
+  }
+  return pts;
+}
+function createTask(){
+  selected=[];locked=false;
+  let key='',tries=0;
+  do{
+    tries++;
+    // WICHTIG: Jede Parabel wird grundsätzlich aus einem ganzzahligen
+    // Scheitelpunkt S(d|e) erzeugt. Damit liegt der Scheitelpunkt immer
+    // exakt auf einem Gitterpunkt und niemals zwischen zwei Rasterlinien.
+    const d=rnd(-3,3),e=rnd(-3,3);
+
+    // Bei „Parabel → Gleichung“ sollen verschiedene Parabeltypen vorkommen:
+    // nach oben / unten geöffnet sowie mit verschiedenen ganzzahligen Faktoren a.
+    // Die Auswahl ist unabhängig davon, welche Eingabeform (Scheitelpunktform
+    // oder allgemeine Form) verlangt wird.
+    if(mode==='read' || (mode==='properties' && propertyGraphVisible)){
+      const factors=[-3,-2,-1,1,2,3];
+      A=factors[rnd(0,factors.length-1)];
+    }else{
+      // Bei „Gleichung → Parabel“ bleibt die mathematische Bedeutung der
+      // gewählten Darstellungsform erhalten: In der Normalform ist a=1.
+      A=form==='normal' ? 1 : [-3,-2,-1,1,2,3][rnd(0,5)];
+    }
+
+    B=-2*A*d;
+    C=A*d*d+e;
+    key=A+'|'+B+'|'+C;
+  }while((visibleIntegerPoints().length<3 || history.includes(key)) && tries<1000);
+
+  history.push(key);if(history.length>2)history.shift();
+  $('p1').textContent=$('p2').textContent=$('p3').textContent='–';
+  $('feedback').className='feedback';$('feedback').textContent='';
+
+  $('drawTask').classList.toggle('hidden',mode!=='draw');
+  $('readTask').classList.toggle('hidden',mode!=='read');
+  $('propertiesTask').classList.toggle('hidden',mode!=='properties');
+
+  if(mode==='properties'){
+    generatePropertyFunction();
+    propertyStep=0;
+    propertyGraphVisible=false;
+    $('graphSection').classList.add('hidden');
+    $('propertyEq').textContent=propertyEquation();
+    renderPropertyQuestion();
+    return;
+  }
+
+  if(mode==='read'){
+    $('readTemplate').textContent=readForm==='vertex'
+      ? 'Gesucht: f(x) = a(x + d)² + e'
+      : 'Gesucht: f(x) = ax² + bx + c';
+    $('equationInput').value='';
+    grid();
+    return;
+  }
+
+  if(form==='normal'){
+    $('givenEq').textContent=normalEq(B,C);
+    $('formHint').textContent='Normalform: f(x) = x² + px + q';
+  }else if(form==='vertex'){
+    const d=-B/(2*A),e=val(d);
+    $('givenEq').textContent=vertexEq(A,d,e);
+    $('formHint').textContent='Scheitelpunktform: f(x) = a(x + d)² + e';
+  }else{
+    $('givenEq').textContent=generalEq(A,B,C);
+    $('formHint').textContent='Allgemeine Form: f(x) = ax² + bx + c';
+  }
+  grid();
+}
+function drawSelectedParabola(){
+  if(selected.length!==3)return;
+  const pts=selected.slice().sort((a,b)=>a.x-b.x);
+  if(pts[0].x===pts[1].x || pts[1].x===pts[2].x || pts[0].x===pts[2].x)return;
+
+  const x1=pts[0].x,y1=pts[0].y,x2=pts[1].x,y2=pts[1].y,x3=pts[2].x,y3=pts[2].y;
+  const d1=(x1-x2)*(x1-x3), d2=(x2-x1)*(x2-x3), d3=(x3-x1)*(x3-x2);
+  if(d1===0||d2===0||d3===0)return;
+
+  const aa=y1/d1 + y2/d2 + y3/d3;
+  const bb=-(y1*(x2+x3)/d1 + y2*(x1+x3)/d2 + y3*(x1+x2)/d3);
+  const cc=y1*x2*x3/d1 + y2*x1*x3/d2 + y3*x1*x2/d3;
+
+  const path=[];
+  let penDown=false;
+  for(let px=PAD;px<=PAD+PLOT;px+=2){
+    const xv=(px-PAD)/STEP-LIM;
+    const yv=aa*xv*xv+bb*xv+cc;
+    const py=PAD+(LIM-yv)*STEP;
+    const visible=py>=PAD-2 && py<=PAD+PLOT+2;
+    if(visible){
+      path.push((penDown?'L':'M')+px.toFixed(2)+' '+py.toFixed(2));
+      penDown=true;
+    }else{
+      penDown=false;
+    }
+  }
+  if(path.length){
+    svg.appendChild(el('path',{d:path.join(' '),fill:'none',stroke:'#2563eb','stroke-width':4,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  }
+}
+
+function grid(){
+  svg.innerHTML='';
+  svg.appendChild(el('rect',{x:PAD,y:PAD,width:PLOT,height:PLOT,fill:'#fff',stroke:'#cbd5e1'}));
+  for(let i=-5;i<=5;i++){
+    const X=xy(i,0)[0],Y=xy(0,i)[1],major=i===0;
+    svg.appendChild(el('line',{x1:X,y1:PAD,x2:X,y2:PAD+PLOT,stroke:major?'#334155':'#e2e8f0','stroke-width':major?2.4:1}));
+    svg.appendChild(el('line',{x1:PAD,y1:Y,x2:PAD+PLOT,y2:Y,stroke:major?'#334155':'#e2e8f0','stroke-width':major?2.4:1}));
+    if(i!==0){
+      svg.appendChild(el('text',{x:X,y:xy(0,0)[1]+20,'text-anchor':'middle','font-size':13,fill:'#64748b'},String(i)));
+      svg.appendChild(el('text',{x:xy(0,0)[0]-10,y:Y+5,'text-anchor':'end','font-size':13,fill:'#64748b'},String(i)));
+    }
+  }
+
+  if(mode==='read' || (mode==='properties' && propertyGraphVisible)){
+    const path=[];
+    let penDown=false;
+    for(let px=PAD;px<=PAD+PLOT;px+=2){
+      const xv=(px-PAD)/STEP-LIM;
+      const yv=val(xv);
+      const py=PAD+(LIM-yv)*STEP;
+      const visible=py>=PAD-2&&py<=PAD+PLOT+2;
+      if(visible){path.push((penDown?'L':'M')+px.toFixed(2)+' '+py.toFixed(2));penDown=true}else penDown=false;
+    }
+    if(path.length)svg.appendChild(el('path',{d:path.join(' '),fill:'none',stroke:'#2563eb','stroke-width':4,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  }else{
+    drawSelectedParabola();
+  }
+
+  selected.forEach((p,i)=>{
+    const [cx,cy]=xy(p.x,p.y);
+    svg.appendChild(el('circle',{cx,cy,r:9,fill:'#2563eb',stroke:'#fff','stroke-width':3}));
+    svg.appendChild(el('text',{x:cx+11,y:cy-10,'font-size':13,'font-weight':800,fill:'#1d4ed8'},'P'+(i+1)));
+  });
+}
+svg.addEventListener('click',e=>{
+  if(locked||mode!=='draw')return;
+  const r=svg.getBoundingClientRect();
+  const px=(e.clientX-r.left)*SIZE/r.width,py=(e.clientY-r.top)*SIZE/r.height;
+  const x=Math.round((px-PAD)/STEP-LIM),y=Math.round(LIM-(py-PAD)/STEP);
+  if(x<-5||x>5||y<-5||y>5)return;
+  if(selected.some(p=>p.x===x&&p.y===y))return;
+  if(selected.length>=3)selected=[];
+  selected.push({x,y});
+  ['p1','p2','p3'].forEach((id,i)=>$(id).textContent=selected[i]?`(${selected[i].x} | ${selected[i].y})`:'–');
+  grid();
+});
+$('clearPoints').onclick=()=>{selected=[];['p1','p2','p3'].forEach(id=>$(id).textContent='–');$('feedback').className='feedback';grid()};
+$('checkDraw').onclick=()=>{
+  if(selected.length<3){$('feedback').className='feedback bad';$('feedback').textContent='Markiere zuerst drei verschiedene Punkte.';return}
+  const ok=selected.every(p=>p.y===val(p.x));
+  if(ok){R++;locked=true;$('feedback').className='feedback good';$('feedback').textContent='Richtig! Alle drei Punkte liegen auf der Parabel.'}
+  else{W++;$('feedback').className='feedback bad';$('feedback').textContent='Noch nicht richtig. Prüfe, ob alle drei Punkte die Funktionsgleichung erfüllen.'}
+  stats();
+};
+
+
+const propertySequence=['vertex','shape','opening','roots','yintercept','symmetry','monotony','range','infinity'];
+
+function renderPropertyQuestion(){
+  locked=false;
+  propertyGraphVisible=false;
+  $('graphSection').classList.add('hidden');
+  if($('graphModeHint')){
+    $('graphModeHint').textContent='Die Parabel wird nur bei Bedarf als Hilfe eingeblendet.';
+  }
+  propResetFeedback();
+  $('checkProperty').classList.remove('hidden');
+  $('propertyProgress').textContent=`Eigenschaft ${propertyStep+1} von ${propertySequence.length}`;
+  const kind=propertySequence[propertyStep];
+  const propertyNames={vertex:'Scheitelpunkt',shape:'Form der Parabel',opening:'Öffnungsrichtung',roots:'Nullstellen',yintercept:'y-Achsenabschnitt',symmetry:'Symmetrieachse',monotony:'Monotonie',range:'Wertebereich',infinity:'Verhalten im Unendlichen'};
+  if($('propertyKnowledgeBtn')) $('propertyKnowledgeBtn').textContent='Wissen: '+propertyNames[kind];
+  const {d,e}=vertexData();
+  const roots=rootsData();
+
+  if(kind==='vertex'){
+    $('propertyQuestion').textContent='Gib den Scheitelpunkt S an.';
+    propertyNumeric(['x =','y =']);
+    const preview=document.createElement('div');
+    preview.className='point'; preview.style.marginTop='10px'; preview.style.fontSize='1.08rem';
+    preview.innerHTML='<strong>S(</strong><span id="vertexPreviewX">…</span><strong> | </strong><span id="vertexPreviewY">…</span><strong>)</strong>';
+    $('propertyAnswer').appendChild(preview);
+    window.updateVertexPreview=()=>{
+      $('vertexPreviewX').textContent=propertyInputs[0].value||'…';
+      $('vertexPreviewY').textContent=propertyInputs[1].value||'…';
+    };
+  }else if(kind==='shape'){
+    $('propertyQuestion').textContent='Welche Form hat die Parabel im Vergleich zur Normalparabel?';
+    const abs=Math.abs(A);
+    const correct=abs===1?0:(abs>1?1:2);
+    propertyChoice(['Normalparabel','gestreckt','gestaucht'],correct);
+  }else if(kind==='opening'){
+    $('propertyQuestion').textContent='In welche Richtung ist die Parabel geöffnet?';
+    propertyChoice(['nach oben geöffnet','nach unten geöffnet'],A>0?0:1);
+  }else if(kind==='roots'){
+    $('propertyQuestion').textContent='Gib die Nullstelle(n) an.';
+    if(roots.length===0){
+      propertyChoice(['keine Nullstellen','eine Nullstelle','zwei Nullstellen'],0);
+    }else if(roots.length===1){
+      propertyNumeric(['x₀ =']);
+    }else{
+      propertyNumeric(['x₁ =','x₂ =']);
+    }
+  }else if(kind==='yintercept'){
+    $('propertyQuestion').textContent='Gib den Schnittpunkt mit der y-Achse an.';
+    propertyNumeric(['']);
+    const prefix=document.createElement('strong');
+    prefix.innerHTML='S<sub>y</sub>(0 | ';
+    const suffix=document.createElement('strong');
+    suffix.textContent=')';
+    const wrap=$('propertyAnswer').firstChild;
+    wrap.insertBefore(prefix,wrap.firstChild);
+    wrap.appendChild(suffix);
+  }else if(kind==='monotony'){
+    $('propertyQuestion').textContent='Wie ist das Monotonieverhalten der Parabel?';
+    const ds=fmtNum(d);
+    const up=`Für x ≤ ${ds} monoton fallend, für x ≥ ${ds} monoton steigend.`;
+    const down=`Für x ≤ ${ds} monoton steigend, für x ≥ ${ds} monoton fallend.`;
+    const correctText=A>0?up:down, wrongText=A>0?down:up;
+    if(Math.random()<0.5) propertyChoice([correctText,wrongText],0);
+    else propertyChoice([wrongText,correctText],1);
+  }else if(kind==='symmetry'){
+    $('propertyQuestion').textContent='Gib die Symmetrieachse der Parabel an.';
+    // Drei Alternativen: X-Achse, Y-Achse oder eine senkrechte Gerade x = ...
+    // Ist x_S = 0, genügt die Auswahl „Y-Achse“; es ist keine zusätzliche Zahl nötig.
+    $('propertyAnswer').innerHTML='';
+    propertyInputs=[];
+    propertyInputTarget=0;
+
+    const row=document.createElement('div');
+    row.className='row';
+    row.id='symmetryAxisChoice';
+    ['X-Achse','Y-Achse'].forEach((txt,i)=>{
+      const b=document.createElement('button');
+      b.type='button'; b.className='choice'; b.textContent=txt;
+      b.onclick=()=>{
+        if(locked)return;
+        row.querySelectorAll('.choice').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on');
+        row.dataset.answer=String(i);
+        if(propertyInputs[0]) propertyInputs[0].value='';
+      };
+      row.appendChild(b);
+    });
+
+    const or=document.createElement('strong');
+    or.textContent='oder';
+    or.style.cssText='align-self:center;padding:0 4px';
+    row.appendChild(or);
+
+    const xWrap=document.createElement('div');
+    xWrap.style.cssText='display:flex;align-items:center;gap:8px';
+    const xLab=document.createElement('strong');
+    xLab.textContent='x =';
+    const inp=document.createElement('input');
+    inp.readOnly=true;
+    inp.style.cssText='width:105px;min-height:48px;border:2px solid #cbd5e1;border-radius:11px;padding:8px 10px;font:inherit;font-size:1.1rem;text-align:center';
+    inp.onclick=()=>{
+      row.querySelectorAll('.choice').forEach(x=>x.classList.remove('on'));
+      delete row.dataset.answer;
+      inp.style.borderColor='#2563eb';
+    };
+    propertyInputs.push(inp);
+    xWrap.appendChild(xLab); xWrap.appendChild(inp); row.appendChild(xWrap);
+    $('propertyAnswer').appendChild(row);
+    $('propertyKeypad').classList.remove('hidden');
+  }else if(kind==='range'){
+    $('propertyQuestion').innerHTML='Bestimme den Wertebereich der quadratischen Funktion.<br><span style="font-weight:700;color:#64748b">Definitionsbereich: D = ℝ</span>';
+    const es=fmtNum(e);
+    const correct=A>0 ? `W = [${es}; ∞)` : `W = (−∞; ${es}]`;
+    const wrong=A>0 ? `W = (−∞; ${es}]` : `W = [${es}; ∞)`;
+    propertyChoice(Math.random()<0.5?[correct,wrong]:[wrong,correct], Math.random()<0.5?0:1);
+    // correctIndex nach dem zufälligen Mischen zuverlässig setzen
+    const row=$('propertyAnswer').querySelector('.row');
+    [...row.children].forEach((b,i)=>{ if(b.textContent===correct) row.dataset.correct=String(i); });
+  }else if(kind==='infinity'){
+    $('propertyQuestion').textContent='Bestimme das Verhalten im Unendlichen mithilfe der Grenzwerte.';
+    const target=A>0?'+∞':'−∞';
+    const other=A>0?'−∞':'+∞';
+    propertyChoice([
+      `lim<sub>x → −∞</sub> f(x) = ${target} &nbsp;&nbsp; und &nbsp;&nbsp; lim<sub>x → +∞</sub> f(x) = ${target}`,
+      `lim<sub>x → −∞</sub> f(x) = ${other} &nbsp;&nbsp; und &nbsp;&nbsp; lim<sub>x → +∞</sub> f(x) = ${other}`,
+      `lim<sub>x → −∞</sub> f(x) = ${target} &nbsp;&nbsp; und &nbsp;&nbsp; lim<sub>x → +∞</sub> f(x) = ${other}`
+    ],0);
+  }
+}
+
+function parsePropNumber(v){
+  const s=v.trim().replace(/[−–—]/g,'-').replace(',','.'); 
+  if(!s)return NaN;
+  if(s.includes('/')){
+    const p=s.split('/');
+    if(p.length!==2 || Number(p[1])===0)return NaN;
+    return Number(p[0])/Number(p[1]);
+  }
+  return Number(s);
+}
+
+function propertyCorrect(){
+  const kind=propertySequence[propertyStep];
+  const {d,e}=vertexData();
+  const roots=rootsData();
+
+  if(kind==='vertex'){
+    return propertyInputs.length===2 &&
+      Math.abs(parsePropNumber(propertyInputs[0].value)-d)<1e-9 &&
+      Math.abs(parsePropNumber(propertyInputs[1].value)-e)<1e-9;
+  }
+  if(kind==='shape'||kind==='opening'||kind==='monotony'||kind==='range'||kind==='infinity'){
+    const row=$('propertyAnswer').querySelector('.row');
+    return row && row.dataset.answer===row.dataset.correct;
+  }
+  if(kind==='symmetry'){
+    const row=$('symmetryAxisChoice');
+    if(!row)return false;
+    // Bei x_S = 0 ist die Y-Achse selbst die Symmetrieachse.
+    if(Math.abs(d)<1e-9 && row.dataset.answer==='1')return true;
+    // Andernfalls ist die Symmetrieachse die Gerade x = x_S.
+    if(propertyInputs.length===1){
+      const x=parsePropNumber(propertyInputs[0].value);
+      if(Number.isFinite(x) && Math.abs(x-d)<1e-9)return true;
+    }
+    return false;
+  }
+  if(kind==='roots'){
+    if(roots.length===0){
+      const row=$('propertyAnswer').querySelector('.row');
+      return row && row.dataset.answer===row.dataset.correct;
+    }
+    const vals=propertyInputs.map(x=>parsePropNumber(x.value));
+    if(vals.some(x=>!Number.isFinite(x)))return false;
+    if(roots.length===1)return Math.abs(vals[0]-roots[0])<1e-9;
+    vals.sort((a,b)=>a-b);
+    return Math.abs(vals[0]-roots[0])<1e-9 && Math.abs(vals[1]-roots[1])<1e-9;
+  }
+  if(kind==='yintercept'){
+    return propertyInputs.length===1 && Math.abs(parsePropNumber(propertyInputs[0].value)-C)<1e-9;
+  }
+  return false;
+}
+
+$('propertyKeypad').addEventListener('click',e=>{
+  const bt=e.target.closest('button[data-key]');
+  if(!bt || locked || !propertyInputs.length)return;
+  const key=bt.dataset.key;
+  const inp=propertyInputs[propertyInputTarget];
+  if(key==='back')inp.value=inp.value.slice(0,-1);
+  else if(key==='clear')inp.value='';
+  else if(key==='switch'){
+    propertyInputTarget=(propertyInputTarget+1)%propertyInputs.length;
+    propertyInputs.forEach((x,j)=>x.style.borderColor=j===propertyInputTarget?'#2563eb':'#cbd5e1');
+  }else inp.value+=key;
+  if(typeof window.updateVertexPreview==='function' && propertySequence[propertyStep]==='vertex'){
+    window.updateVertexPreview();
+  }
+});
+
+$('checkProperty').onclick=()=>{
+  if(locked)return;
+  const ok=propertyCorrect();
+  if(ok){
+    R++;
+    locked=true;
+    $('feedback').className='feedback good';
+    $('feedback').textContent='Richtig!';
+    $('checkProperty').classList.add('hidden');
+    if(propertyStep<propertySequence.length-1){
+      $('nextProperty').classList.remove('hidden');
+    }else{
+      $('feedback').textContent='Richtig! Du hast alle Eigenschaften dieser Parabel bearbeitet.';
+    }
+  }else{
+    W++;
+    // Nach einer falschen Antwort NICHT sperren:
+    // Löschen, Korrigieren und erneutes Prüfen bleiben möglich.
+    locked=false;
+    $('feedback').className='feedback bad';
+    $('feedback').textContent='Noch nicht richtig. Korrigiere deine Eingabe oder nutze die Parabel als Hilfe.';
+    $('checkProperty').classList.remove('hidden');
+    $('propertyGraphHelp').classList.remove('hidden');
+
+    // Erst nach einer richtigen Lösung darf zur nächsten Eigenschaft
+    // weitergegangen werden.
+    $('nextProperty').classList.add('hidden');
+  }
+  stats();
+};
+
+$('nextProperty').onclick=()=>{
+  if(propertyStep<propertySequence.length-1){
+    propertyStep++;
+    renderPropertyQuestion();
+  }
+};
+
+$('propertyGraphHelp').onclick=showPropertyGraphHelp;
+
+
+function knowledgeHtml(){
+  if(mode==='draw'){
+    if(form==='normal') return `<h2 id="knowledgeTitle">Wissen: Gleichung → Parabel</h3><p>Bei der Normalform <strong>f(x)=x²+px+q</strong> handelt es sich um eine verschobene Normalparabel. Zum Zeichnen bestimmst du zuerst den Scheitelpunkt und anschließend zwei symmetrische Punkte.</p><div class="knowledgeFormula">Scheitelpunkt: S(−p/2 | −p²/4 + q)</div><div class="knowledgeFormula">Beispiel: f(x)=x²−2x−3</div><h4>Beispiel – Lösungsweg</h4><p><strong>1. Berechne den Scheitelpunkt.</strong><br>Hier ist p=−2 und q=−3.<br>S(−(−2)/2 | −(−2)²/4−3) = <strong>S(1 | −4)</strong>.</p><p><strong>2. Bestimme Punkt 2 und Punkt 3.</strong><br>Du kannst die y-Werte für <strong>x<sub>S</sub>−1</strong> und <strong>x<sub>S</sub>+1</strong> berechnen. Da es sich hier um eine Normalparabel handelt, geht es auch direkt am Raster: Vom Scheitelpunkt <strong>ein Kästchen nach rechts und ein Kästchen nach oben</strong> sowie <strong>ein Kästchen nach links und ein Kästchen nach oben</strong>.</p><p>Damit erhältst du <strong>P₂(2 | −3)</strong> und <strong>P₃(0 | −3)</strong>.</p><p><strong>3. Zeichne die Parabel</strong> durch die drei Punkte S, P₂ und P₃.</p><p><strong>Merke:</strong> Zum Zeichnen im Trainer brauchst du drei verschiedene Punkte mit ganzzahligen Koordinaten.</p>`;
+    if(form==='vertex') return `<h2 id="knowledgeTitle">Wissen: Gleichung → Parabel</h3><p>Die Scheitelpunktform lautet <strong>f(x)=a(x+d)²+e</strong>. Daraus kannst du den Scheitelpunkt direkt ablesen: <strong>S(−d | e)</strong>. Wichtig: Die x-Koordinate des Scheitelpunkts hat also das <strong>entgegengesetzte Vorzeichen</strong> zu d. Der Faktor a bestimmt, wie weit du bei einer waagerechten Änderung um 1 nach oben oder unten gehst.</p><ul><li>a &gt; 0: nach oben geöffnet</li><li>a &lt; 0: nach unten geöffnet</li><li>|a| &gt; 1: gestreckt (schmaler)</li><li>0 &lt; |a| &lt; 1: gestaucht (breiter)</li></ul><div class="knowledgeFormula">Beispiel: f(x)=2(x+1)²−3</div><h4>Beispiel – Lösungsweg</h4><p><strong>1. Lies den Scheitelpunkt ab:</strong> d=1 und e=−3, also <strong>S(−1 | −3)</strong>.</p><p><strong>2. Bestimme Punkt 2 und Punkt 3.</strong><br>Du kannst die y-Werte für <strong>x<sub>S</sub>−1</strong> und <strong>x<sub>S</sub>+1</strong> berechnen. Hier ist a=2. Deshalb gehst du vom Scheitelpunkt jeweils <strong>ein Kästchen nach rechts bzw. links und zwei Kästchen nach oben</strong>.</p><p>Damit erhältst du <strong>P₂(0 | −1)</strong> und <strong>P₃(−2 | −1)</strong>.</p><p><strong>3. Zeichne die Parabel</strong> durch die drei Punkte S, P₂ und P₃.</p><p><strong>Merke:</strong> Bei negativem a gehst du entsprechend nach unten. Bei gestauchten Parabeln kann es sinnvoll sein, statt x<sub>S</sub>±1 weiter vom Scheitel entfernt liegende ganzzahlige x-Werte zu verwenden, damit die Punkte auf dem Raster liegen.</p>`;
+    return `<h2 id="knowledgeTitle">Wissen: Gleichung → Parabel</h3><p>In der allgemeinen Form <strong>f(x)=ax²+bx+c</strong> bestimmt a die Öffnung und Form der Parabel. Zum Zeichnen bestimmst du zuerst den Scheitelpunkt. Seine x-Koordinate ist <strong>x<sub>S</sub>=−b/(2a)</strong>; anschließend berechnest du <strong>y<sub>S</sub>=f(x<sub>S</sub>)</strong>.</p><div class="knowledgeFormula">Beispiel: f(x)=2x²−4x−1</div><h4>Beispiel – Lösungsweg</h4><p><strong>1. Berechne den Scheitelpunkt.</strong><br>x<sub>S</sub>=−(−4)/(2·2)=1.<br>y<sub>S</sub>=f(1)=2−4−1=−3.<br>Also <strong>S(1 | −3)</strong>.</p><p><strong>2. Bestimme Punkt 2 und Punkt 3.</strong><br>Berechne die y-Werte für <strong>x<sub>S</sub>−1</strong> und <strong>x<sub>S</sub>+1</strong>. Weil hier a=2 ist, kannst du auch direkt vom Scheitelpunkt jeweils <strong>ein Kästchen nach links bzw. rechts und zwei Kästchen nach oben</strong> gehen.</p><p>Damit erhältst du <strong>P₂(0 | −1)</strong> und <strong>P₃(2 | −1)</strong>.</p><p><strong>3. Zeichne die Parabel</strong> durch S, P₂ und P₃.</p><p><strong>Merke:</strong> Ist a negativ, liegen die beiden Punkte entsprechend unterhalb des Scheitelpunkts. Bei |a|&lt;1 können weiter entfernte x-Werte nötig sein, damit ganzzahlige Rasterpunkte entstehen.</p>`;
+  }
+  if(mode==='read'){
+    if(readForm==='vertex') return `<h2 id="knowledgeTitle">Wissen: Parabel → Gleichung</h3><p>Für die Scheitelpunktform <strong>f(x)=a(x+d)²+e</strong> liest du zuerst den Scheitelpunkt <strong>S(x<sub>S</sub> | y<sub>S</sub>)</strong> aus dem Graphen ab. Dann gilt <strong>d=−x<sub>S</sub></strong> und <strong>e=y<sub>S</sub></strong>.</p><p><strong>a kannst du direkt am Graphen ablesen:</strong> Gehe vom Scheitelpunkt <strong>1 Kästchen nach rechts</strong> (oder links) und beobachte, um wie viele Kästchen sich der y-Wert verändert. Diese Änderung ist <strong>a</strong>.</p><ul><li>1 nach rechts, 1 nach oben → <strong>a=1</strong></li><li>1 nach rechts, 2 nach oben → <strong>a=2</strong></li><li>1 nach rechts, 3 nach unten → <strong>a=−3</strong></li><li>Bei <strong>a=0,5</strong> geht die Parabel nach 1 Kästchen nur 0,5 Kästchen nach oben. Auf dem ganzzahligen Raster kannst du stattdessen 2 Kästchen nach rechts gehen: Dann ändert sich y um 2 Kästchen.</li></ul><div class="knowledgeFormula">Beispiel: Scheitelpunkt S(−1 | −2); bei x=0 liegt die Parabel bei y=0.</div><h4>Beispiel – Lösungsweg</h4><p><strong>1. Scheitelpunkt ablesen:</strong> S(−1 | −2). Daher ist d=1 und e=−2.</p><p><strong>2. a direkt ablesen:</strong> Vom Scheitelpunkt gehst du 1 Kästchen nach rechts. Die Parabel geht dabei 2 Kästchen nach oben. Also ist <strong>a=2</strong>.</p><p><strong>3. Werte einsetzen:</strong> a=2, d=1 und e=−2.</p><p><strong>4. Ergebnis:</strong> <strong>f(x)=2(x+1)²−2</strong>.</p><p><strong>Merke:</strong> Zeigt die Parabel beim Schritt nach rechts nach unten, ist a negativ. Je größer |a| ist, desto schmaler ist die Parabel.</p>`;
+    return `<h2 id="knowledgeTitle">Wissen: Parabel → Gleichung</h3><p>Gesucht ist <strong>f(x)=ax²+bx+c</strong>. Bestimme zunächst die Scheitelpunktform direkt aus dem Graphen und wandle sie anschließend durch Ausmultiplizieren um.</p><p><strong>a direkt ablesen:</strong> Gehe vom Scheitelpunkt 1 Kästchen nach rechts oder links. Die Änderung des y-Wertes entspricht a: 1 nach oben → a=1, 2 nach oben → a=2, 1 nach unten → a=−1. Bei gestauchten Parabeln kannst du einen größeren waagerechten Abstand nutzen.</p><div class="knowledgeFormula">Beispiel: S(1 | −2); bei x=2 liegt die Parabel bei y=0.</div><h4>Beispiel – Lösungsweg</h4><p><strong>1. Scheitelpunkt:</strong> S(1 | −2). In der Schreibweise f(x)=a(x+d)²+e gilt also d=−1 und e=−2.</p><p><strong>2. a ablesen:</strong> 1 Kästchen nach rechts führt 2 Kästchen nach oben. Daher <strong>a=2</strong>.</p><p><strong>3. Scheitelpunktform:</strong> <strong>f(x)=2(x−1)²−2</strong>.</p><p><strong>4. Ausmultiplizieren:</strong> 2(x²−2x+1)−2 = 2x²−4x.</p><p><strong>Ergebnis:</strong> <strong>f(x)=2x²−4x</strong>.</p>`;
+  }
+  const kind=propertySequence[propertyStep];
+  if(kind==='vertex') return `<h2 id="knowledgeTitle">Wissen: Scheitelpunkt</h2><p>Der Scheitelpunkt ist der höchste oder tiefste Punkt der Parabel. In der Scheitelpunktform <strong>f(x)=a(x+d)²+e</strong> kannst du ihn direkt ablesen:</p><div class="knowledgeFormula">S(−d | e)</div><p>Steht die Funktion in der allgemeinen Form <strong>f(x)=ax²+bx+c</strong>, berechnest du zuerst <strong>x<sub>S</sub>=−b/(2a)</strong> und danach <strong>y<sub>S</sub>=f(x<sub>S</sub>)</strong>.</p><div class="knowledgeExample"><strong>Beispiel:</strong> f(x)=2(x+1)²−3<br>d=1 und e=−3 ⇒ <strong>S(−1 | −3)</strong>.</div><p><strong>Merke:</strong> Bei x steht im Scheitelpunkt das entgegengesetzte Vorzeichen von d.</p>`;
+  if(kind==='shape') return `<h2 id="knowledgeTitle">Wissen: Form der Parabel</h2><p>Der Betrag von <strong>a</strong> entscheidet, ob die Parabel normal, gestreckt oder gestaucht ist.</p><ul><li><strong>|a|=1:</strong> Normalparabel</li><li><strong>|a|&gt;1:</strong> gestreckt – die Parabel ist schmaler</li><li><strong>0&lt;|a|&lt;1:</strong> gestaucht – die Parabel ist breiter</li></ul><div class="knowledgeExample"><strong>Beispiele:</strong><br>f(x)=−(x+1)²+2 ⇒ |a|=1 ⇒ <strong>Normalparabel</strong>.<br>f(x)=2(x+1)²+2 ⇒ |a|=2 ⇒ <strong>gestreckt</strong>.<br>f(x)=0,5(x+1)²+2 ⇒ |a|=0,5 ⇒ <strong>gestaucht</strong>.</div><p>Das Vorzeichen von a spielt für die Form keine Rolle; dafür ist nur <strong>|a|</strong> wichtig.</p>`;
+  if(kind==='opening') return `<h2 id="knowledgeTitle">Wissen: Öffnungsrichtung</h2><p>Am Vorzeichen von <strong>a</strong> erkennst du die Öffnungsrichtung der Parabel.</p><div class="knowledgeFormula">a &gt; 0 → nach oben &nbsp;&nbsp; | &nbsp;&nbsp; a &lt; 0 → nach unten</div><div class="knowledgeExample"><strong>Beispiel:</strong> f(x)=−2(x−1)²+3. Hier ist a=−2. Weil a negativ ist, ist die Parabel <strong>nach unten geöffnet</strong>.</div>`;
+  if(kind==='roots') return `<h2 id="knowledgeTitle">Wissen: Nullstellen</h2><p>Nullstellen sind die Schnittpunkte der Parabel mit der x-Achse. Dort gilt immer <strong>y=0</strong>. Deshalb setzt du:</p><div class="knowledgeFormula">f(x)=0</div><p>Bei der Scheitelpunktform kannst du anschließend die Gleichung schrittweise nach x lösen.</p><div class="knowledgeExample"><strong>Beispiel:</strong> f(x)=(x−2)²−4<br>0=(x−2)²−4<br>(x−2)²=4<br>x−2=±2<br><strong>x₁=0 und x₂=4</strong>.</div><p>Es kann <strong>keine, eine oder zwei</strong> Nullstellen geben.</p>`;
+  if(kind==='yintercept') return `<h2 id="knowledgeTitle">Wissen: Schnittpunkt mit der y-Achse</h2><p>Auf der y-Achse ist die x-Koordinate immer <strong>0</strong>. Setze deshalb <strong>x=0</strong> in die Funktionsgleichung ein.</p><div class="knowledgeFormula">S<sub>y</sub>(0 | f(0))</div><div class="knowledgeExample"><strong>Beispiel:</strong> f(x)=x²−2x−3<br>f(0)=0²−2·0−3=−3<br>Also <strong>S<sub>y</sub>(0 | −3)</strong>.</div><p>In der allgemeinen Form <strong>f(x)=ax²+bx+c</strong> ist der y-Wert direkt <strong>c</strong>.</p>`;
+  if(kind==='symmetry') return `<h2 id="knowledgeTitle">Wissen: Symmetrieachse</h2><p>Jede Parabel ist an einer senkrechten Geraden durch ihren Scheitelpunkt symmetrisch. Die Symmetrieachse hat deshalb die Gleichung:</p><div class="knowledgeFormula">x = x<sub>S</sub></div><p>Bei <strong>f(x)=a(x+d)²+e</strong> gilt <strong>x<sub>S</sub>=−d</strong>, also:</p><div class="knowledgeFormula">x = −d</div><div class="knowledgeExample"><strong>Beispiel:</strong> f(x)=2(x+3)²−1 ⇒ S(−3 | −1) ⇒ Symmetrieachse <strong>x=−3</strong>.</div>`;
+  if(kind==='monotony') return `<h2 id="knowledgeTitle">Wissen: Monotonieverhalten</h2><p>Am Scheitelpunkt wechselt die Parabel ihre Richtung. Entscheidend sind die x-Koordinate <strong>x<sub>S</sub></strong> und die Öffnungsrichtung.</p><ul><li><strong>Nach oben geöffnet:</strong> bis x<sub>S</sub> monoton fallend, ab x<sub>S</sub> monoton steigend.</li><li><strong>Nach unten geöffnet:</strong> bis x<sub>S</sub> monoton steigend, ab x<sub>S</sub> monoton fallend.</li></ul><div class="knowledgeExample"><strong>Beispiel:</strong> f(x)=(x−2)²−4 hat S(2 | −4) und ist nach oben geöffnet.<br>Also: für <strong>x≤2 monoton fallend</strong> und für <strong>x≥2 monoton steigend</strong>.</div>`;
+  if(kind==='range'){ const {e}=vertexData(); const es=fmtNum(e); return `<h2 id="knowledgeTitle">Wissen: Wertebereich</h2><div class="knowledgeFormula">Definitionsbereich: D = ℝ</div><p>Bei quadratischen Funktionen ist der Definitionsbereich immer die Menge aller reellen Zahlen. Der Wertebereich hängt dagegen vom y-Wert des Scheitelpunkts und von der Öffnungsrichtung ab.</p><ul><li><strong>a &gt; 0:</strong> Der Scheitelpunkt ist ein Tiefpunkt. Dann gilt <strong>W = [y<sub>S</sub>; ∞)</strong>.</li><li><strong>a &lt; 0:</strong> Der Scheitelpunkt ist ein Hochpunkt. Dann gilt <strong>W = (−∞; y<sub>S</sub>]</strong>.</li></ul><div class="knowledgeExample">Für die aktuelle Funktion ist y<sub>S</sub>=${es}.</div>`; }
+  return `<h2 id="knowledgeTitle">Wissen: Verhalten im Unendlichen</h2><p>Für sehr große positive und negative x-Werte bestimmt das Vorzeichen von <strong>a</strong> das Verhalten der quadratischen Funktion.</p><ul><li><strong>a &gt; 0:</strong> lim<sub>x→−∞</sub> f(x)=+∞ und lim<sub>x→+∞</sub> f(x)=+∞.</li><li><strong>a &lt; 0:</strong> lim<sub>x→−∞</sub> f(x)=−∞ und lim<sub>x→+∞</sub> f(x)=−∞.</li></ul><p>Bei einer Parabel zeigen also beide Enden langfristig in dieselbe Richtung.</p>`;
+}
+function updateKnowledge(){
+  if(!$('knowledgeOverlay').classList.contains('hidden')) $('knowledgeContent').innerHTML=knowledgeHtml();
+}
+function showKnowledge(){
+  $('knowledgeContent').innerHTML=knowledgeHtml();
+  $('knowledgeOverlay').classList.remove('hidden');
+}
+$('knowledgeBtn').onclick=showKnowledge;
+if($('propertyKnowledgeBtn')) $('propertyKnowledgeBtn').onclick=showKnowledge;
+$('knowledgeClose').onclick=()=>$('knowledgeOverlay').classList.add('hidden');
+$('knowledgeOverlay').addEventListener('click',e=>{if(e.target===$('knowledgeOverlay'))$('knowledgeOverlay').classList.add('hidden')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('knowledgeOverlay').classList.add('hidden')});
+
+function normalizeEqInput(s){
+  return s.toLowerCase()
+    .replace(/\s+/g,'')
+    .replace(/[−–—]/g,'-')
+    .replace(/,/g,'.')
+    .replace(/^f\(x\)=/,'')
+    .replace(/\^2/g,'²')
+    .replace(/\*\*/g,'²')
+    .replace(/\*/g,'');
+}
+function evaluateExpression(expr,x){
+  let s=normalizeEqInput(expr);
+
+  // Typische schulische Schreibweisen robust in JavaScript-Syntax überführen.
+  // Beispiele, die damit erkannt werden:
+  // -(x+3)²+2
+  // (x-2)²-1
+  // -3(x-2)²+3
+  // 2x²-4x+1
+  // -x²+3x-2
+
+  // Hochzahl vereinheitlichen.
+  s=s.replace(/²/g,'^2');
+
+  // Ein führendes Minus direkt vor einer Klammer bedeutet -1 mal Klammer.
+  // Das hilft insbesondere bei -(x+3)^2.
+  s=s.replace(/(^|[+\-(*/])-\(/g,'$1-1*(');
+
+  // Implizite Multiplikation ergänzen.
+  s=s.replace(/(\d|\))x/g,'$1*x');      // 3x, )x
+  s=s.replace(/x(\d|\()/g,'x*$1');      // x2, x(
+  s=s.replace(/(\d|x|\))(\()/g,'$1*$2'); // 2(, x(, )(
+  s=s.replace(/\)(\d|x)/g,')*$1');      // )2, )x
+
+  // Exponenten in JavaScript-Syntax umwandeln.
+  s=s.replace(/\^/g,'**');
+
+  if(!/^[0-9x+\-*/().]+$/.test(s))throw new Error('ungültig');
+  return Function('x','return ('+s+')')(x);
+}
+
+$('equationKeypad').addEventListener('click',e=>{
+  const bt=e.target.closest('button[data-key]');
+  if(!bt || locked)return;
+  const input=$('equationInput');
+  const key=bt.dataset.key;
+  if(key==='back'){
+    input.value=input.value.slice(0,-1);
+  }else if(key==='clear'){
+    input.value='';
+  }else if(key==='='){
+    return;
+  }else if(key==='²'){
+    input.value+='²';
+  }else{
+    input.value+=key;
+  }
+});
+
+$('checkEquation').onclick=()=>{
+  if(locked)return;
+  const raw=$('equationInput').value.trim();
+  if(!raw){
+    $('feedback').className='feedback bad';
+    $('feedback').textContent='Bitte gib zuerst eine Funktionsgleichung ein.';
+    return;
+  }
+  let ok=true;
+  try{
+    for(let x of [-3,-2,-1,0,1,2,3]){
+      const y=evaluateExpression(raw,x);
+      if(!Number.isFinite(y)||Math.abs(y-val(x))>1e-8){ok=false;break}
+    }
+  }catch(e){ok=false}
+  if(ok){
+    R++;locked=true;
+    $('feedback').className='feedback good';
+    $('feedback').textContent='Richtig! Die Funktionsgleichung passt zur Parabel.';
+  }else{
+    W++;
+    $('feedback').className='feedback bad';
+    $('feedback').textContent='Noch nicht richtig. Prüfe die abgelesenen Werte und die ausgewählte Form.';
+  }
+  stats();
+};
+
+
+document.querySelectorAll('#modeGroup .choice').forEach(bt=>bt.onclick=()=>{
+  document.querySelectorAll('#modeGroup .choice').forEach(x=>x.classList.remove('on'));
+  bt.classList.add('on');
+  mode=bt.dataset.mode;
+  $('drawFormGroup').classList.toggle('hidden',mode!=='draw');
+  $('readFormGroup').classList.toggle('hidden',mode!=='read');
+  if(mode!=='properties')$('graphSection').classList.remove('hidden');
+  if($('graphModeHint') && mode==='draw'){
+    $('graphModeHint').textContent='Markiere drei Punkte der Parabel – am besten den Scheitelpunkt und zwei weitere Punkte. Sobald drei Punkte gesetzt sind, wird die Parabel durch diese Punkte eingezeichnet.';
+  }else if($('graphModeHint') && mode==='read'){
+    $('graphModeHint').textContent='Lies die eingezeichnete Parabel aus dem Koordinatensystem ab.';
+  }
+  createTask();
+});
+
+document.querySelectorAll('#readFormButtons .choice').forEach(bt=>bt.onclick=()=>{
+  document.querySelectorAll('#readFormButtons .choice').forEach(x=>x.classList.remove('on'));
+  bt.classList.add('on');
+  readForm=bt.dataset.readForm;
+  createTask();
+});
+
+document.querySelectorAll('#formGroup .choice').forEach(bt=>bt.onclick=()=>{
+  document.querySelectorAll('#formGroup .choice').forEach(x=>x.classList.remove('on'));
+  bt.classList.add('on');form=bt.dataset.form;createTask();updateKnowledge();
+});
+$('newTask').onclick=createTask;
+createTask();
+</script>
+</body>
+</html>
